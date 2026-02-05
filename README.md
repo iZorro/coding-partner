@@ -28,7 +28,7 @@ A warm VS Code plugin that encourages you with random messages when you finish k
 - Encouragement languages: Chinese (zh-CN/zh-TW/zh-HK), English (all other locales).
 
 ## Changelog
-### v1.0.1
+### v1.0.2
 - Initial release.
 - Support Chinese/English auto-switch.
 - Support monitoring file creation and method completion.
