@@ -5,21 +5,98 @@ import { getRandomEncouragement } from './encouragements';
 // ---------- typing effect helpers ----------
 // some emoji/words to show around cursor while typing
 // use unicode escapes to prevent encoding loss during compilation
-const typingEffects = [
-  '\u26A1\u95EA\u7535', // ???
-  '\uD83D\uDCA5\u66B4\u51FB', // ????
-  '\uD83C\uDF1F\u5353\u8D8A', // ????
-  '\u2728\u7CBE\u534E', // ???
-  '\uD83D\uDD25\u70ED\u8840', // ????
-  '\u7206\u53D1 Critical!', // ?? Critical!
-  '\uD83C\uDFC6 Nice!', // ?? Nice!
-  'Super!\u5F3A\u8005', // Super!??
-  '\uD83C\uDF89\u559C\u5174\u5316', // ?????
-  '\uD83D\uDE80 Boost\u6F0F' // ?? Boost?
+// typing effects in different languages
+const typingEffectsEn = [
+  '\u26A1 Keep going, you got this',
+  '\uD83D\uDCA5 Almost there, hang tight',
+  '\uD83C\uDF1F Great work, keep pushing',
+  '\u2728 Nice code, stay focused',
+  '\uD83D\uDD25 You rock, don?t stop',
+  '\uD83C\uDFC6 Fantastic, keep it up',
+  '\uD83D\uDCAA Impressive, well done',
+  '\uD83D\uDE80 Stay strong, finish fast',
+  '\uD83D\uDE0D Excellent progress, bravo',
+  '\uD83D\uDD96 Sharp mind, sharp code',
+  '\uD83D\uDE4C\uD83C\uDFFC Keep coding, stay sharp',
+  '\uD83E\uDD24 You?re doing amazing things',
+  '\uD83D\uDEA8 Focus now, reward later',
+  '\uD83E\uDD13 Brilliant, keep going',
+  '\uD83D\uDC4D Code smarter, not harder',
+  '\uD83C\uDFC1 Victory is near, continue',
+  '\uD83C\uDF8C Stay curious, keep building',
+  '\u2600\uFE0F Your logic is solid',
+  '\uD83D\uDCA1 Energy high, bugs low',
+  '\uD83C\uDFAB Dream big, code bigger',
+  '\u2705 Persistence pays off soon',
+  '\u274C Write today, succeed tomorrow',
+  '\u1F9E0 Think deep, code well',
+  '\uD83C\uDFB2 Create magic with code',
+  '\uD83C\uDFB6 Innovate, iterate, improve',
+  '\uD83C\uDFAD Code flows, brain grows',
+  '\uD83D\uDC31 Great ideas, great code',
+  '\uD83D\uDC36 Keep calm and code on',
+  '\uD83C\uDF40 Level up your craft',
+  '\uD83C\uDF08 Challenge accepted, completed',
+  '\uD83C\uDF7B One more line, victory',
+  '\uD83C\uDFAF Build fast, learn faster',
+  '\uD83D\uDD25 Be bold, be brilliant',
+  '\uD83E\uDE84 Solve problems, build futures',
+  '\u2699\uFE0F Write clean, stay sane',
+  '\uD83D\uDEE1\uFE0F Believe, build, become',
+  '\uD83D\uDD79\uFE0F Keep pushing boundaries today',
+  '\uD83D\uDCDD Code hard, ship early',
+  '\u26A1 Make every keystroke count'
 ];
+
+const typingEffectsZh = [
+  '\u26A1 ???????',
+  '\uD83D\uDCA5 ??????',
+  '\uD83C\uDF1F ???????',
+  '\u2728 ???????',
+  '\uD83D\uDD25 ????',
+  '\uD83C\uDFC6 ????',
+  '\uD83D\uDCAA ????',
+  '\uD83D\uDE80 ????',
+  '\uD83D\uDE0D ????',
+  '\uD83D\uDD96 ????',
+  '\uD83D\uDE4C\uD83C\uDFFC ????',
+  '\uD83E\uDD24 ???',
+  '\uD83D\uDEA8 ????',
+  '\uD83E\uDD13 ????',
+  '\uD83D\uDC4D ?????',
+  '\uD83C\uDFC1 ????',
+  '\uD83C\uDF8C ????',
+  '\u2600\uFE0F ????',
+  '\uD83D\uDCA1 ????',
+  '\uD83C\uDFAB ????',
+  '\u2705 ????',
+  '\u274C ????????',
+  '\u1F9E0 ????',
+  '\uD83C\uDFB2 ??????',
+  '\uD83C\uDFB6 ????',
+  '\uD83C\uDFAD ?????',
+  '\uD83D\uDC31 ?????',
+  '\uD83D\uDC36 ????',
+  '\uD83C\uDF40 ????',
+  '\uD83C\uDF08 ????',
+  '\uD83C\uDF7B ????',
+  '\uD83C\uDFAF ????',
+  '\uD83D\uDD25 ????',
+  '\uD83E\uDE84 ????',
+  '\u2699\uFE0F ????',
+  '\uD83D\uDEE1\uFE0F ????',
+  '\uD83D\uDD79\uFE0F ????',
+  '\uD83D\uDCDD ????',
+  '\u26A1 ??????'
+];
+
+// current list depending on IDE language
+let currentTypingEffects: string[] = typingEffectsEn;
+
 // keep a list of active decoration types so we can dispose them later if needed
 let activeEffectDecorations: vscode.TextEditorDecorationType[] = [];
-
+// debounce timestamp to prevent overlapping effects during rapid typing
+let lastTypingEffectTime: number = 0;
 
 // ??????????????????????????
 let encouragementOutputChannel: vscode.OutputChannel;
@@ -33,6 +110,13 @@ let lastActiveFileName: string = '';
  */
 export function activate(context: vscode.ExtensionContext) {
   console.log('???coding-partner ????????');
+  // choose effect language based on IDE locale
+  const lang = vscode.env.language.toLowerCase();
+  if (lang.startsWith('zh')) {
+    currentTypingEffects = typingEffectsZh;
+  } else {
+    currentTypingEffects = typingEffectsEn;
+  }
 
   // 1. ?????????????? echo ?????
   encouragementOutputChannel = vscode.window.createOutputChannel('Coding Partner');
@@ -172,26 +256,36 @@ function outputEncouragementToOutputChannel() {
  * ??????????????????
  */
 function showTypingEffect(editor: vscode.TextEditor, position: vscode.Position) {
-  const effect = typingEffects[Math.floor(Math.random() * typingEffects.length)];
+  const now = Date.now();
+  // if previous effect happened less than 150ms ago, skip to avoid overlap
+  if (now - lastTypingEffectTime < 190) {
+    return;
+  }
+  lastTypingEffectTime = now;
+  const list = currentTypingEffects || typingEffectsEn;
+  const effect = list[Math.floor(Math.random() * list.length)];
   const color = getRandomColor();
+  // decoration placed at the cursor, then shifted upward via transform
   const deco = vscode.window.createTextEditorDecorationType({
     after: {
       contentText: effect,
-      margin: '0 0 0 3px',
+      margin: '0 0 0 0',
       color: color,
-      fontWeight: 'bold',
-      textDecoration: 'none'
-    }
+      textDecoration: `none; line-height:2em; background: rgba(68, 66, 66, 0.5); color:${color}; font-size:2em; position:absolute; top:-1.6em; transform: translateX(0); pointer-events:none; padding:0 5px; border-radius:10px;`
+    },
+    rangeBehavior: vscode.DecorationRangeBehavior.ClosedOpen
   });
 
   activeEffectDecorations.push(deco);
   const range = new vscode.Range(position, position);
   editor.setDecorations(deco, [{ range }]);
 
+  // keep decoration visible a bit longer so user can read it (random 200-400ms)
+  const stay = 200 + Math.random() * 200;
   setTimeout(() => {
     deco.dispose();
     activeEffectDecorations = activeEffectDecorations.filter(d => d !== deco);
-  }, 300);
+  }, stay);
 }
 
 /**
@@ -205,4 +299,5 @@ function getRandomColor(): string {
   }
   return color;
 }
+
 

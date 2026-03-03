@@ -13,6 +13,7 @@ A warm VS Code plugin that encourages you with random messages when you finish k
 专属终端：在名为 "Coding Partner"（编码伙伴）的独立终端中输出鼓励信息（采用绿色样式以获得更好的可见性）。
 4. **Low interference**: Only trigger on valid code files, avoid frequent false triggers.
 5. **Typing animation**: When typing, a brief effect (闪电/暴击/卓越 等) pops up near the cursor to add fun.
+6. **Typing popups**: When typing characters the extension briefly displays a small transparent dialog above the cursor showing fun emojis or words.
 低干扰：仅在有效的代码文件上触发，避免频繁的误触发。
 
 ## How to Use
@@ -29,6 +30,7 @@ A warm VS Code plugin that encourages you with random messages when you finish k
 - Encouragement languages: Chinese (zh-CN/zh-TW/zh-HK), English (all other locales).
 
 ## Changelog
+
 ### v1.0.3
 - Added typing animation effect: emojis/keywords appear near cursor when typing.
 

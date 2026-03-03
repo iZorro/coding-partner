@@ -3,7 +3,7 @@
   "displayName": "Coding Partner 编码伙伴",
   "publisher": "huatsing",
   "description": "A warm coding partner that encourages you with random messages (support Chinese/English auto-switch) when you finish key coding actions like creating files or completing methods.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "icon": "resources/partner.png",
   "engines": {
     "vscode": "^1.80.0"
