@@ -31,6 +31,9 @@ A warm VS Code plugin that encourages you with random messages when you finish k
 
 ## Changelog
 
+### v1.0.4
+- Fix the Chinese prompt garbled code
+
 ### v1.0.3
 - Added typing animation effect: emojis/keywords appear near cursor when typing.
 
