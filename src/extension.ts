@@ -98,18 +98,18 @@ let activeEffectDecorations: vscode.TextEditorDecorationType[] = [];
 // debounce timestamp to prevent overlapping effects during rapid typing
 let lastTypingEffectTime: number = 0;
 
-// ??????????????????????????
+// output channel used to show encouragement messages
 let encouragementOutputChannel: vscode.OutputChannel;
 
-// ????????????????/?????
+// track the last known document content and active file name
 let lastDocumentContent: string = '';
 let lastActiveFileName: string = '';
 
 /**
- * ???????VS Code ??/????????
+ * Called when the extension is activated by VS Code
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('???coding-partner ????????');
+  console.log('Coding Partner extension activated');
   // choose effect language based on IDE locale
   const lang = vscode.env.language.toLowerCase();
   if (lang.startsWith('zh')) {
@@ -118,43 +118,43 @@ export function activate(context: vscode.ExtensionContext) {
     currentTypingEffects = typingEffectsEn;
   }
 
-  // 1. ?????????????? echo ?????
+  // 1. create an output channel for encouragement messages
   encouragementOutputChannel = vscode.window.createOutputChannel('Coding Partner');
 
-  // 2. ???????????????????????
+  // 2. listen for document changes to trigger effects
   const documentChangeDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
     monitorDocumentChange(event);
   });
 
-  // 3. ????????????????/?????
+  // 3. listen for file creation events
   const documentCreateDisposable = vscode.workspace.onDidCreateFiles((event) => {
     monitorDocumentCreate(event);
   });
 
-  // 4. ????
+  // 4. register disposables so they are cleaned up on deactivate
   context.subscriptions.push(
     documentChangeDisposable,
     documentCreateDisposable,
-    encouragementOutputChannel // ?????????????
+    encouragementOutputChannel // include output channel in subscriptions
   );
 }
 
 /**
- * ???????VS Code ??/????????
+ * Called when the extension is deactivated
  */
 export function deactivate() {
-  console.log('coding-partner ????????');
+  console.log('Coding Partner extension deactivated');
 }
 
 // -------------- ???? --------------
 /**
- * ??????????????????????
- * @param event - ????????
+ * Handles when the text document changes
+ * @param event - the change event for the document
  */
 function monitorDocumentChange(event: vscode.TextDocumentChangeEvent) {
   const document = event.document;
 
-  // ????????????????????????
+  // only operate on supported programming languages
   const validLanguages = [
     'javascript', 'typescript', 'java', 'python', 'c', 'cpp',
     'csharp', 'go', 'ruby', 'php', 'vue', 'react', 'html', 'css'
@@ -177,29 +177,29 @@ function monitorDocumentChange(event: vscode.TextDocumentChangeEvent) {
   const currentContent = document.getText();
   const currentFileName = document.fileName;
 
-  // ?????????????????????
+  // if content is empty or smaller than before, just update trackers and skip
   if (lastDocumentContent === '' || currentContent.length <= lastDocumentContent.length) {
     lastDocumentContent = currentContent;
     lastActiveFileName = currentFileName;
     return;
   }
 
-  // ??????????????????
+  // if a code block completion or similar action detected, output encouragement
   if (checkNodeAction(currentContent, lastDocumentContent)) {
     outputEncouragementToOutputChannel();
   }
 
-  // ?????????????
+  // update stored content and file name for next change
   lastDocumentContent = currentContent;
   lastActiveFileName = currentFileName;
 }
 
 /**
- * ???????????????
- * @param event - ????????
+ * Handles newly created files in the workspace
+ * @param event - file creation event
  */
 function monitorDocumentCreate(event: vscode.FileCreateEvent) {
-  // ???????.gitignore?.env ???????????
+  // filter out hidden/system files (like .gitignore, .env)
   const validFiles = event.files.filter(file => {
     const fileName = file.fsPath.split('/').pop() || '';
     return !fileName.startsWith('.');
@@ -211,49 +211,49 @@ function monitorDocumentCreate(event: vscode.FileCreateEvent) {
 }
 
 /**
- * ????????????????????????
- * @param currentContent - ????????
- * @param lastContent - ????????
- * @returns boolean - ???????? true
+ * Determines whether a significant coding action occurred since last update
+ * @param currentContent - the full current document text
+ * @param lastContent - the previous document text
+ * @returns boolean - true if an action pattern was found
  */
 function checkNodeAction(currentContent: string, lastContent: string): boolean {
-  // ???????????????????
+  // compute newly added text since last check
   const newContent = currentContent.slice(lastContent.length);
 
-  // ???????????????????????????
+  // patterns that look like code block completions or declarations
   const nodeActionPatterns = [
-    /\}\s*$/, // ????????????????
-    /function\s+\w+\s*\(.*\)\s*\{\s*[\s\S]*\}\s*$/, // ????????
-    /\w+\s*=\s*\(.*\)\s*=>\s*\{\s*[\s\S]*\}\s*$/, // ????????
-    /class\s+\w+\s*\{\s*[\s\S]*\}\s*$/, // ?????
-    /const\s+\w+\s*=\s*\{\s*[\s\S]*\}\s*;\s*$/ // ?????????
+    /\}\s*$/, // closing brace
+    /function\s+\w+\s*\(.*\)\s*\{\s*[\s\S]*\}\s*$/, // function declaration
+    /\w+\s*=\s*\(.*\)\s*=>\s*\{\s*[\s\S]*\}\s*$/, // arrow function assignment
+    /class\s+\w+\s*\{\s*[\s\S]*\}\s*$/, // class declaration
+    /const\s+\w+\s*=\s*\{\s*[\s\S]*\}\s*;\s*$/ // object assignment
   ];
 
-  // ?????????????????
+  // test new content against each pattern
   return nodeActionPatterns.some(pattern => pattern.test(newContent));
 }
 
 /**
- * ?????????????? echo ???????
+ * Appends a random encouragement message to the output channel
  */
 function outputEncouragementToOutputChannel() {
-  // ???????
+  // select a random encouragement message
   const encouragement = getRandomEncouragement();
-  // ??????????????????
+  // format current time for logging
   const now = new Date();
   const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
   const outputContent = `[${timeStr}] [Coding Partner] \uD83C\uDF89 ${encouragement}`;
 
-  // ??????appendLine ???????????????
+  // add the message to the output channel
   encouragementOutputChannel.appendLine(outputContent);
 
-  // ????????????????? terminal.show(true) ?????
+  // make sure the output channel is visible to the user
   encouragementOutputChannel.show(true);
 }
 // ---------- typing animation helpers ----------
 
 /**
- * ??????????????????
+ * Displays a visual typing effect at the cursor position
  */
 function showTypingEffect(editor: vscode.TextEditor, position: vscode.Position) {
   const now = Date.now();
@@ -289,7 +289,7 @@ function showTypingEffect(editor: vscode.TextEditor, position: vscode.Position) 
 }
 
 /**
- * ?????? HEX ?????
+ * Generate a random HEX color string
  */
 function getRandomColor(): string {
   const letters = '789ABCD';
